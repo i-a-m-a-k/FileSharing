@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.InetAddress;
 import java.net.URI;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.*;
@@ -80,7 +81,10 @@ class PageHttpHandler implements HttpHandler {
 
             while( (line = reader.readLine()) != null ) {
                 hasContent = true;
-                htmlPage += "<a href=\"/files/" + line + "\" download>" + line + "</a><br><br>";
+                htmlPage += "<a " + 
+                    "href=\"/files/" + line + 
+                    "\" type=\"" + URLConnection.guessContentTypeFromName(line) + 
+                    "\" download>" + line + "</a><br><br>";
             }
             if(!hasContent)
                 htmlPage += "No files available for download :)";
@@ -120,12 +124,10 @@ class FileHttpHandler implements HttpHandler {
         absoluteURI = absoluteURI.replace("%20", " ");
         byte[] fileContent;
         try {
-            System.out.println("File: " + absoluteURI + "\n\n");
-
-	        File file = new File(absoluteURI);
+            File file = new File(absoluteURI);
             FileInputStream fileStream = new FileInputStream(file);
 
-            exchange.getResponseHeaders().set("Content-Type", "text/html; charset=\"UTF-8\"");
+            exchange.getResponseHeaders().set("Content-Type", URLConnection.guessContentTypeFromName(file.getName()));
             exchange.getResponseHeaders().set("Accept-Ranges", "bytes");
             exchange.sendResponseHeaders(200, file.length());
 
